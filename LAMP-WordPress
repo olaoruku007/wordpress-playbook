@@ -1,0 +1,64 @@
+- hosts: Staging
+  become: yes
+  tasks:
+    - name: upgrade all packages
+      dnf:
+        name: "*"
+        state: latest
+
+    - command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm  -y
+
+    - name: Install the latest Apache
+      dnf:
+        name: httpd
+        state: latest
+
+    - name: Install mySQL and PHP
+      dnf:
+        name:
+          - php
+          - php-mysqlnd
+          - mysql-server
+          - wget
+          - php-soap
+          - php-gd
+          - php-intl
+          - php-opcache
+          - php-zip
+          - php-curl
+        state: present
+
+    - name: Start Apache(httpd) and persist reboot
+      service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Start mySQL and persist reboot
+      service:
+        name: mysqld
+        state: started
+        enabled: true
+
+    - name: Start php-fpm and persist reboot
+      service:
+        name: php-fpm
+        state: started
+        enabled: true
+
+    - name: Create mySQL Database Variables
+      var:
+        wp_mysql_db: wp
+        wp_mysql_user: wp
+        wp_mysql_password: adeola
+
+    - name: Create mySQL database
+      mysql_db:
+        name: "{{ wp_mysql_db }}"
+        state: present
+
+    - name: Create mySQL User
+      mysql_user:
+        name: "{{ wp_mysql_user }}"
+        password: "{{ wp_myqsl_password }}"
+        priv: "*.*:ALL"
